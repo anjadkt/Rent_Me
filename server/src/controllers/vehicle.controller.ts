@@ -6,6 +6,8 @@ import {
 } from "../types/vehicle.types.js";
 import AppError from "../utils/appError.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
+import { Rental } from "../models/rental.model.js";
+import { RentalStatus } from "../types/rental.types.js";
 
 export const getVehicles = async (req: Request, res: Response) => {
   
@@ -117,19 +119,96 @@ export const getVehicles = async (req: Request, res: Response) => {
 };
 
 export const getOneVehicle = async (req: Request, res: Response) => {
+
   const { vehicleId } = req.params;
 
-  const vehicle = await Vehicle.findById(vehicleId).select("-__v").lean();
+  // Get vehicle
+  const vehicle = await Vehicle.findOne({
+    _id: vehicleId,
+    isActive: true,
+  })
+    .select("-__v")
+    .lean();
 
   if (!vehicle) {
     throw new AppError(404, "Vehicle not found");
   }
 
+  const now = new Date();
+
+  // Get active rental
+  const currentRental = await Rental.findOne({
+    vehicle: vehicle._id,
+
+    status: RentalStatus.ACTIVE,
+
+    startAt: {
+      $lte: now,
+    },
+
+    endAt: {
+      $gt: now,
+    },
+  })
+    .select("startAt endAt rentalType duration")
+    .lean();
+
+  // Get upcoming rentals
+  const upcomingRentals = await Rental.find({
+    vehicle: vehicle._id,
+
+    status: {
+      $in: [
+        RentalStatus.PENDING,
+        RentalStatus.ACTIVE,
+      ],
+    },
+
+    endAt: {
+      $gt: now,
+    },
+  })
+    .select("startAt endAt rentalType duration")
+    .sort({
+      startAt: 1,
+    })
+    .lean();
+
+  // Determine availability
+  const isCurrentlyAvailable =
+    vehicle.status === VehicleStatus.AVAILABLE &&
+    !currentRental;
+
   return res.status(200).json({
     success: true,
-    data: vehicle,
+
+    data: {
+      vehicle,
+
+      availability: {
+        isAvailable: isCurrentlyAvailable,
+
+        currentRental: currentRental
+          ? {
+            startAt: currentRental.startAt,
+            endAt: currentRental.endAt,
+            rentalType: currentRental.rentalType,
+            duration: currentRental.duration,
+          }
+          : null,
+
+        upcomingRentals: upcomingRentals.map(
+          (rental) => ({
+            startAt: rental.startAt,
+            endAt: rental.endAt,
+            rentalType: rental.rentalType,
+            duration: rental.duration,
+          })
+        ),
+      },
+    },
   });
-}
+};
 
 export const createVehicle = async (req: Request, res: Response) => {
 
