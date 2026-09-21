@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import passport from "./config/passport.js";
-import routes from "./routes/index.js";
+import routes from "./routes.js";
 import globalErrorHandler from "./middlewares/error.middleware.js";
 
 const app: Application = express();

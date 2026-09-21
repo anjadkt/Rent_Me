@@ -348,3 +348,318 @@ export const getRentals = async (req: Request, res: Response) => {
     },
   });
 };
+
+export const getAllRentals = async (req: Request, res: Response) => {
+
+  const {
+    search,
+    status,
+    paymentStatus,
+    rentalType,
+    fromDate,
+    toDate,
+    sort = "latest",
+    page = "1",
+    limit = "20",
+  } = req.query;
+
+  // Pagination
+  const currentPage = Math.max(Number(page), 1);
+
+  const itemsPerPage = Math.min(
+    Math.max(Number(limit), 1),
+    100
+  );
+
+  const skip =
+    (currentPage - 1) * itemsPerPage;
+
+  // Validate filters
+  if (
+    status &&
+    !Object.values(RentalStatus).includes(
+      status as RentalStatus
+    )
+  ) {
+    throw new AppError(400, "Invalid rental status");
+  }
+
+  if (
+    paymentStatus &&
+    !Object.values(PaymentStatus).includes(
+      paymentStatus as PaymentStatus
+    )
+  ) {
+    throw new AppError(
+      400,
+      "Invalid payment status"
+    );
+  }
+
+  if (
+    rentalType &&
+    !Object.values(RentalType).includes(
+      rentalType as RentalType
+    )
+  ) {
+    throw new AppError(400, "Invalid rental type");
+  }
+
+  // Match filter
+  const matchFilter: Record<string, any> = {};
+
+  if (status) {
+    matchFilter.status = status;
+  }
+
+  if (paymentStatus) {
+    matchFilter.paymentStatus = paymentStatus;
+  }
+
+  if (rentalType) {
+    matchFilter.rentalType = rentalType;
+  }
+
+  // Date filtering
+  if (fromDate || toDate) {
+
+    matchFilter.createdAt = {};
+
+    if (fromDate) {
+      const startDate = new Date(fromDate as string);
+
+      if (Number.isNaN(startDate.getTime())) {
+        throw new AppError(400, "Invalid fromDate");
+      }
+
+      matchFilter.createdAt.$gte = startDate;
+    }
+
+    if (toDate) {
+      const endDate = new Date(toDate as string);
+
+      if (Number.isNaN(endDate.getTime())) {
+        throw new AppError(400, "Invalid toDate");
+      }
+
+      endDate.setHours(23, 59, 59, 999);
+
+      matchFilter.createdAt.$lte = endDate;
+    }
+  }
+
+  // Aggregation
+  const pipeline: any[] = [
+    {
+      $match: matchFilter,
+    },
+
+    // Get user information
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$user",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ];
+
+  // Search
+  if (search && typeof search === "string") {
+    pipeline.push({
+      $match: {
+        $or: [
+          {
+            "vehicleSnapshot.name": {
+              $regex: search,
+              $options: "i",
+            },
+          },
+          {
+            "vehicleSnapshot.brand": {
+              $regex: search,
+              $options: "i",
+            },
+          },
+          {
+            "vehicleSnapshot.modelName": {
+              $regex: search,
+              $options: "i",
+            },
+          },
+          {
+            "vehicleSnapshot.registrationNumber": {
+              $regex: search,
+              $options: "i",
+            },
+          },
+          {
+            "user.name": {
+              $regex: search,
+              $options: "i",
+            },
+          },
+          {
+            "user.email": {
+              $regex: search,
+              $options: "i",
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  // Sorting
+  if (sort === "latest") {
+    pipeline.push({
+      $set: {
+        statusPriority: {
+          $cond: [
+            {
+              $eq: ["$status", RentalStatus.ACTIVE],
+            },
+            0,
+            1,
+          ],
+        },
+      },
+    });
+
+    pipeline.push({
+      $sort: {
+        statusPriority: 1,
+        createdAt: -1,
+      },
+    });
+  }
+
+  if (sort === "oldest") {
+    pipeline.push({
+      $sort: {
+        createdAt: 1,
+      },
+    });
+  }
+
+  if (sort === "newest") {
+    pipeline.push({
+      $sort: {
+        createdAt: -1,
+      },
+    });
+  }
+
+  if (sort === "start_latest") {
+    pipeline.push({
+      $sort: {
+        startAt: -1,
+      },
+    });
+  }
+
+  if (sort === "start_earliest") {
+    pipeline.push({
+      $sort: {
+        startAt: 1,
+      },
+    });
+  }
+
+  // Pagination + data
+  pipeline.push({
+    $facet: {
+      data: [
+        {
+          $skip: skip,
+        },
+        {
+          $limit: itemsPerPage,
+        },
+        {
+          $project: {
+            statusPriority: 0,
+
+            "user.password": 0,
+            "user.googleId": 0,
+            "user.__v": 0,
+          },
+        },
+      ],
+
+      totalCount: [
+        {
+          $count: "count",
+        },
+      ],
+    },
+  });
+
+  const [result] = await Rental.aggregate(
+    pipeline
+  );
+
+  const rentals = result?.data ?? [];
+
+  const total =
+    result?.totalCount?.[0]?.count ?? 0;
+
+  const totalPages = Math.ceil(
+    total / itemsPerPage
+  );
+
+  return res.status(200).json({
+    success: true,
+    data: rentals,
+
+    pagination: {
+      total,
+      page: currentPage,
+      limit: itemsPerPage,
+      totalPages,
+      hasNextPage:
+        currentPage < totalPages,
+      hasPreviousPage:
+        currentPage > 1,
+    },
+  });
+};
+
+export const getRentalById = async (
+  req: Request,
+  res: Response
+) => {
+  const { rentalId } = req.params;
+
+  if (!rentalId) {
+    throw new AppError(400, "Rental ID is required");
+  }
+
+  const rental = await Rental.findById(rentalId)
+    .populate({
+      path: "user",
+      select: "-password -__v",
+    })
+    .populate({
+      path: "vehicle",
+      select: "-__v",
+    })
+    .lean();
+
+  if (!rental) {
+    throw new AppError(404, "Rental not found");
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: rental,
+  });
+};
