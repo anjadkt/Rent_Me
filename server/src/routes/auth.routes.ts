@@ -1,6 +1,6 @@
 import { Router } from "express";
 import passport from "passport";
-import { googleLogin, logout, refreshToken } from "../controllers/auth.controller.js";
+import { getMe, googleLogin, logout, refreshToken } from "../controllers/auth.controller.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import authenticate from "../middlewares/auth.middleware.js";
 
@@ -22,16 +22,17 @@ router.get(
   asyncHandler(googleLogin)
 );
 
+router.get("/me", authenticate, asyncHandler(getMe))
+
+router.get("/refresh", authenticate, asyncHandler(refreshToken));
+
+router.post("/logout", authenticate, asyncHandler(logout));
+
 router.get("/login-failed", (_req, res) => {
   res.status(401).json({
     success: false,
     message: "Google authentication failed",
   });
 });
-
-
-router.get("/refresh", authenticate, asyncHandler(refreshToken));
-
-router.post("/logout", authenticate, asyncHandler(logout));
 
 export default router;

@@ -86,6 +86,31 @@ export const refreshToken = async (
 
 };
 
+export const getMe = async (
+  req: Request,
+  res: Response
+) => {
+
+  if (!req.user) {
+    throw new AppError(401, "Authentication required");
+  }
+
+  const user = await User.findById(req.user._id).select("-__v");
+
+  if (!user) throw new AppError(404, "User not found");
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+    },
+  });
+};
+
 export const logout = (
   _req: Request,
   res: Response
