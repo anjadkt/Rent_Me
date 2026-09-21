@@ -1,5 +1,5 @@
 import { Schema, model, Document } from "mongoose";
-import { UserRole } from "../types/auth.types";
+import { UserRole } from "../types/auth.types.js";
 
 export interface IUser extends Document {
   name: string;

@@ -18,4 +18,7 @@ export const env = {
   googleClientId: getEnv("GOOGLE_CLIENT_ID"),
   googleClientSecret: getEnv("GOOGLE_CLIENT_SECRET"),
   googleCallbackUrl: getEnv("GOOGLE_CALLBACK_URL"),
+  cloudinaryCloudName: getEnv("CLOUDINARY_CLOUD_NAME"),
+  cloudinaryApiKey: getEnv("CLOUDINARY_API_KEY"),
+  cloudinaryApiSecret: getEnv("CLOUDINARY_API_SECRET"),
 };
