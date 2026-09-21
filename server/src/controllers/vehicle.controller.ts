@@ -87,6 +87,9 @@ export const getVehicles = async (req: Request, res: Response) => {
 
   const [vehicles, total] = await Promise.all([
     Vehicle.find(filter)
+      .select(
+        "name category brand modelName registrationNumber images pricePerHour pricePerDay status isActive createdAt"
+      )
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(itemsPerPage)
@@ -112,6 +115,21 @@ export const getVehicles = async (req: Request, res: Response) => {
     },
   });
 };
+
+export const getOneVehicle = async (req: Request, res: Response) => {
+  const { vehicleId } = req.params;
+
+  const vehicle = await Vehicle.findById(vehicleId).select("-__v").lean();
+
+  if (!vehicle) {
+    throw new AppError(404, "Vehicle not found");
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: vehicle,
+  });
+}
 
 export const createVehicle = async (req: Request, res: Response) => {
 

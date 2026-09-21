@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createVehicle, deleteVehicle, getVehicles, updateVehicle } from "../controllers/vehicle.controller.js";
+import { createVehicle, deleteVehicle, getOneVehicle, getVehicles, updateVehicle } from "../controllers/vehicle.controller.js";
 import { UserRole } from "../types/auth.types.js";
 import authenticate from "../middlewares/auth.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -9,6 +9,8 @@ import upload from "../middlewares/upload.middleware.js";
 const router = Router();
 
 router.get("/", asyncHandler(getVehicles));
+
+router.get("/:vehicleId", asyncHandler(getOneVehicle))
 
 router.post(
   "/",
