@@ -21,4 +21,6 @@ export const env = {
   cloudinaryCloudName: getEnv("CLOUDINARY_CLOUD_NAME"),
   cloudinaryApiKey: getEnv("CLOUDINARY_API_KEY"),
   cloudinaryApiSecret: getEnv("CLOUDINARY_API_SECRET"),
+  razorpayKeyId: getEnv("RAZORPAY_KEY_ID"),
+  razorpayKeySecret: getEnv("RAZORPAY_KEY_SECRET"),
 };
