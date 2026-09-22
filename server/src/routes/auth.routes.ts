@@ -1,12 +1,14 @@
 import { Router } from "express";
 import passport from "passport";
-import { getMe, googleLogin, logout, refreshToken, sendOtp } from "../controllers/auth.controller.js";
+import { getMe, googleLogin, logout, refreshToken, sendOtp, verifyOtp } from "../controllers/auth.controller.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import authenticate from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.post("/otp", asyncHandler(sendOtp))
+router.post("/otp", asyncHandler(sendOtp));
+
+router.post( "/verify", asyncHandler(verifyOtp));
 
 router.get(
   "/google",
