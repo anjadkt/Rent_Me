@@ -164,14 +164,12 @@ export const verifyOtp = async (req: Request, res: Response) => {
     success: true,
     message: "Email verified successfully",
     data: {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-      },
-    },
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+    }
   });
 };
 

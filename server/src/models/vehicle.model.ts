@@ -23,8 +23,6 @@ export interface IVehicle extends Document {
     publicId:string
   }[];
 
-  pricePerHour: number;
-
   pricePerDay: number;
 
   securityDeposit?: number;
@@ -90,12 +88,6 @@ const vehicleSchema = new Schema<IVehicle>(
         publicId:String
       }],
       default: [],
-    },
-
-    pricePerHour: {
-      type: Number,
-      required: true,
-      min: 0,
     },
 
     pricePerDay: {

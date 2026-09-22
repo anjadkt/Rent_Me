@@ -16,6 +16,7 @@ export const getVehicles = async (req: Request, res: Response) => {
     category,
     status,
     isActive,
+    sort,
     page = "1",
     limit = "20",
   } = req.query;
@@ -87,12 +88,20 @@ export const getVehicles = async (req: Request, res: Response) => {
     filter.isActive = isActive === "true";
   }
 
+  // Sorting
+  let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
+  if (sort === "price-low") sortOption = { pricePerDay: 1 };
+  else if (sort === "price-high") sortOption = { pricePerDay: -1 };
+  else if (sort === "name-asc") sortOption = { name: 1 };
+  else if (sort === "name-desc") sortOption = { name: -1 };
+  else if (sort === "latest") sortOption = { createdAt: -1 };
+
   const [vehicles, total] = await Promise.all([
     Vehicle.find(filter)
       .select(
-        "name category brand modelName registrationNumber images pricePerHour pricePerDay status isActive createdAt"
+        "name category brand modelName registrationNumber images pricePerDay status isActive createdAt"
       )
-      .sort({ createdAt: -1 })
+      .sort(sortOption)
       .skip(skip)
       .limit(itemsPerPage)
       .lean(),
@@ -219,7 +228,6 @@ export const createVehicle = async (req: Request, res: Response) => {
     modelName,
     registrationNumber,
     description,
-    pricePerHour,
     pricePerDay,
     securityDeposit,
     specifications,
@@ -252,10 +260,6 @@ export const createVehicle = async (req: Request, res: Response) => {
     publicId : image.public_id
   }));
 
-  if (pricePerHour === undefined || pricePerHour === null) {
-    throw new AppError(400, "Price per hour is required");
-  }
-
   if (pricePerDay === undefined || pricePerDay === null) {
     throw new AppError(400, "Price per day is required");
   }
@@ -268,7 +272,6 @@ export const createVehicle = async (req: Request, res: Response) => {
     registrationNumber,
     description,
     images,
-    pricePerHour,
     pricePerDay,
     securityDeposit,
     specifications,
@@ -298,7 +301,6 @@ export const updateVehicle = async (req: Request, res: Response) => {
     registrationNumber,
     description,
     images,
-    pricePerHour,
     pricePerDay,
     securityDeposit,
     status,
@@ -338,10 +340,6 @@ export const updateVehicle = async (req: Request, res: Response) => {
   }
 
   // Validate numeric fields
-  if (pricePerHour !== undefined && pricePerHour < 0) {
-    throw new AppError(400, "Price per hour cannot be negative");
-  }
-
   if (pricePerDay !== undefined && pricePerDay < 0) {
     throw new AppError(400, "Price per day cannot be negative");
   }
@@ -360,7 +358,6 @@ export const updateVehicle = async (req: Request, res: Response) => {
   }
   if (description !== undefined) vehicle.description = description;
   if (images !== undefined) vehicle.images = images;
-  if (pricePerHour !== undefined) vehicle.pricePerHour = pricePerHour;
   if (pricePerDay !== undefined) vehicle.pricePerDay = pricePerDay;
   if (securityDeposit !== undefined) {
     vehicle.securityDeposit = securityDeposit;

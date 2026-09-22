@@ -28,7 +28,7 @@ router.get(
 
 router.get("/me", authenticate, asyncHandler(getMe))
 
-router.post("/refresh", authenticate, asyncHandler(refreshToken));
+router.post("/refresh", asyncHandler(refreshToken));
 
 router.post("/logout", authenticate, asyncHandler(logout));
 

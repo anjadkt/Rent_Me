@@ -16,7 +16,6 @@ export interface IRentalVehicleSnapshot {
 }
 
 export interface IRentalPriceSnapshot {
-  pricePerHour: number;
   pricePerDay: number;
   securityDeposit: number;
   rentalAmount: number;
@@ -79,11 +78,6 @@ const rentalVehicleSnapshotSchema =
 const rentalPriceSnapshotSchema =
   new Schema<IRentalPriceSnapshot>(
     {
-      pricePerHour: {
-        type: Number,
-        required: true,
-      },
-
       pricePerDay: {
         type: Number,
         required: true,

@@ -123,10 +123,7 @@ export const createRental = async ( req: Request,res: Response ) => {
   }
 
   // Calculate price
-  const rentalAmount =
-    rentalType === RentalType.HOUR
-      ? vehicle.pricePerHour * rentalDuration
-      : vehicle.pricePerDay * rentalDuration;
+  const rentalAmount = vehicle.pricePerDay * rentalDuration;
 
   const securityDeposit =
     vehicle.securityDeposit ?? 0;
@@ -158,7 +155,6 @@ export const createRental = async ( req: Request,res: Response ) => {
     duration: rentalDuration,
 
     priceSnapshot: {
-      pricePerHour: vehicle.pricePerHour,
       pricePerDay: vehicle.pricePerDay,
       securityDeposit,
       rentalAmount,
