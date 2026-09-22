@@ -51,8 +51,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const response = await getMe();
 
-      if (response.success && response.user) {
-        setUser(response.user);
+      if (response.success && response.data) {
+        setUser(response.data);
       } else {
         setUser(null);
       }

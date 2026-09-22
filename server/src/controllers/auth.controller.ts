@@ -205,11 +205,9 @@ export const googleLogin = async (req: Request, res:Response, _next:NextFunction
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
         
-    res.json({
-      success: true,
-      message: "Google authentication successful",
-      user: req.user,
-    });
+    return res.redirect(
+      `${env.clientUrl}/`
+    );
 
 }
 

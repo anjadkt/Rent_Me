@@ -33,7 +33,6 @@ const otpSchema = new Schema<IOtp>(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
 
     attempts: {

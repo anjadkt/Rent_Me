@@ -13,6 +13,7 @@ export const env = {
   port: Number(getEnv("PORT")),
   nodeEnv: getEnv("NODE_ENV"),
   clientUrl: getEnv("CLIENT_URL"),
+  databaseUrl: getEnv("DATABASE_URL"),
   jwtAccessSecret:getEnv("JWT_ACCESS_SECRET"),
   jwtRefreshSecret: getEnv("JWT_REFRESH_SECRET"),
   googleClientId: getEnv("GOOGLE_CLIENT_ID"),
