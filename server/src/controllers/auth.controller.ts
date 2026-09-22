@@ -6,7 +6,174 @@ import { clearAuthCookies, setAuthCookies } from "../utils/authCookies.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import type { Request, Response, NextFunction } from "express";
 import { env } from "../config/env.js";
+import { generateOtp, hashOtp } from "../utils/otp.js";
+import { Otp } from "../models/otp.model.js";
+import { sendOtpEmail } from "../utils/sendOtpEmail.js";
 
+
+export const sendOtp = async (req: Request, res: Response) => {
+  
+  const { name, email } = req.body;
+
+  if (!name) {
+    throw new AppError(400, "Name is required");
+  }
+
+  if (!email) {
+    throw new AppError(400, "Email is required");
+  }
+
+  const normalizedEmail = email
+    .trim()
+    .toLowerCase();
+
+  // Generate OTP
+  const otp = generateOtp();
+
+  // Hash OTP 
+  const hashedOtp = hashOtp(otp);
+
+  // OTP expires after 5 minutes
+  const expiresAt = new Date(
+    Date.now() + 5 * 60 * 1000
+  );
+
+  // Remove previous OTPs for this email
+  await Otp.deleteMany({
+    email: normalizedEmail,
+  });
+
+  // Store new OTP
+  await Otp.create({
+    email: normalizedEmail,
+    name: name.trim(),
+    otp: hashedOtp,
+    expiresAt,
+    attempts: 0,
+  });
+
+  // Send email
+  await sendOtpEmail(
+    normalizedEmail,
+    name.trim(),
+    otp
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "OTP sent successfully",
+  });
+};
+
+export const verifyOtp = async (req: Request, res: Response) => {
+  
+  const { email, otp } = req.body;
+
+  if (!email) {
+    throw new AppError(400, "Email is required");
+  }
+
+  if (!otp) {
+    throw new AppError(400, "OTP is required");
+  }
+
+  const normalizedEmail = email
+    .trim()
+    .toLowerCase();
+
+  const otpRecord = await Otp.findOne({
+    email: normalizedEmail,
+  });
+
+  if (!otpRecord) {
+    throw new AppError( 404, "OTP not found or expired" );
+  }
+
+  // Check expiry
+  if (otpRecord.expiresAt < new Date()) {
+    await Otp.deleteOne({
+      _id: otpRecord._id,
+    });
+
+    throw new AppError(400, "OTP has expired" );
+  }
+
+  // Prevent brute-force attempts
+  if (otpRecord.attempts >= 5) {
+
+    await Otp.deleteOne({
+      _id: otpRecord._id,
+    });
+
+    throw new AppError( 429, "Too many incorrect attempts. Please request a new OTP");
+  }
+
+  const hashedOtp = hashOtp(otp);
+
+  if (hashedOtp !== otpRecord.otp) {
+
+    otpRecord.attempts += 1;
+
+    await otpRecord.save();
+
+    throw new AppError( 400, "Invalid OTP");
+  }
+
+  // OTP is valid
+  const user = await User.findOneAndUpdate(
+    { email: normalizedEmail },
+    {
+      $setOnInsert: {
+        name: otpRecord.name,
+        email: normalizedEmail,
+        role: UserRole.USER,
+      },
+    },
+    {
+      new: true,
+      upsert: true,
+    }
+  );
+
+  if (!user) {
+    throw new AppError( 500, "Unable to create user");
+  }
+
+  // Delete OTP after successful verification
+  await Otp.deleteOne({
+    _id: otpRecord._id,
+  });
+
+  // Generate authentication tokens
+  const accessToken = generateAccessToken({
+    _id: user._id.toString(),
+    role : user.role
+  });
+
+  const refreshToken = generateRefreshToken({
+    _id: user._id.toString(),
+  });
+
+  setAuthCookies(
+    res,
+    accessToken,
+    refreshToken
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Email verified successfully",
+    data: {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+      },
+    },
+  });
+};
 
 export const googleLogin = async (req: Request, res:Response, _next:NextFunction) =>  {
     

@@ -23,4 +23,9 @@ export const env = {
   cloudinaryApiSecret: getEnv("CLOUDINARY_API_SECRET"),
   razorpayKeyId: getEnv("RAZORPAY_KEY_ID"),
   razorpayKeySecret: getEnv("RAZORPAY_KEY_SECRET"),
+  smtpHost: getEnv("SMTP_HOST"),
+  smtpPort: getEnv("SMTP_PORT"),
+  smtpUser: getEnv("SMTP_USER"),
+  smtpPassword: getEnv("SMTP_PASSWORD"),
+  smtpFrom: getEnv("SMTP_FROM"),
 };
