@@ -8,6 +8,7 @@ export default function AdminLayout() {
     const saved = localStorage.getItem("adminSidebarCollapsed");
     return saved === "true";
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed((prev) => {
@@ -20,14 +21,19 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-100 flex p-3 gap-3">
       {/* Sidebar on the left */}
-      <AdminSidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
+      <AdminSidebar 
+        isCollapsed={isSidebarCollapsed} 
+        toggleSidebar={toggleSidebar} 
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
       
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 gap-3">
-        <AdminHeader />
+        <AdminHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
         
         {/* Scrollable Content */}
-        <main className="flex-1 bg-white rounded-2xl border border-slate-200 overflow-auto p-6 shadow-sm">
+        <main className="flex-1 bg-white rounded-2xl border border-slate-200 overflow-auto p-4 sm:p-6 shadow-sm">
           <Outlet />
         </main>
       </div>

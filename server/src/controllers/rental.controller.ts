@@ -4,6 +4,7 @@ import { VehicleStatus } from "../types/vehicle.types.js";
 import AppError from "../utils/appError.js";
 import { Vehicle } from "../models/vehicle.model.js";
 import { Rental } from "../models/rental.model.js";
+import { RentalLog } from "../models/rental-log.model.js";
 import { env } from "../config/env.js";
 import razorpay from "../config/razorpay.js";
 import crypto from "crypto"
@@ -243,8 +244,8 @@ export const getRentals = async (req: Request, res: Response) => {
 
   // Fetch all rentals for the user, sorted by most recent
   const rentals = await Rental.find({ user: userId })
-    .sort({ createdAt: -1 })
-    .lean();
+    .populate("logs")
+    .sort({ createdAt: -1 });
 
   // Separate into active and past (inactive) rentals
   const activeRentals = rentals.filter(
@@ -254,7 +255,8 @@ export const getRentals = async (req: Request, res: Response) => {
   const pastRentals = rentals.filter(
     (rental) =>
       rental.status === RentalStatus.COMPLETED ||
-      rental.status === RentalStatus.CANCELLED
+      rental.status === RentalStatus.CANCELLED ||
+      rental.status === RentalStatus.REJECTED
   );
 
   return res.status(200).json({
@@ -375,6 +377,14 @@ export const getAllRentals = async (req: Request, res: Response) => {
       $unwind: {
         path: "$user",
         preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "rentallogs",
+        localField: "_id",
+        foreignField: "rental",
+        as: "logs",
       },
     },
   ];
@@ -559,6 +569,7 @@ export const getRentalById = async (
       path: "vehicle",
       select: "-__v",
     })
+    .populate("logs")
     .lean();
 
   if (!rental) {
@@ -569,4 +580,125 @@ export const getRentalById = async (
     success: true,
     data: rental,
   });
+};
+
+export const rejectRental = async (req: Request, res: Response) => {
+  const { rentalId } = req.params;
+  const { notes } = req.body;
+
+  if (!notes) {
+    throw new AppError(400, "Notes are required to reject a rental");
+  }
+
+  const rental = await Rental.findById(rentalId);
+  if (!rental) throw new AppError(404, "Rental not found");
+
+  if (rental.status !== RentalStatus.ACTIVE && rental.status !== RentalStatus.PENDING) {
+    throw new AppError(400, "Can only reject active or pending rentals");
+  }
+
+  if (rental.razorpayPaymentId && rental.paymentStatus === PaymentStatus.PAID) {
+    try {
+      await razorpay.payments.refund(rental.razorpayPaymentId, {});
+      rental.paymentStatus = PaymentStatus.REFUNDED;
+    } catch (error: any) {
+      console.error("Refund failed:", error);
+      throw new AppError(500, "Failed to process refund: " + error.error?.description || error.message);
+    }
+  }
+
+  rental.status = RentalStatus.REJECTED;
+  rental.expireAt = undefined;
+  await rental.save();
+
+  await RentalLog.create({
+    rental: rental._id,
+    action: "REJECTED",
+    notes
+  });
+
+  return res.status(200).json({ success: true, message: "Rental rejected and fully refunded" });
+};
+
+export const cancelRental = async (req: Request, res: Response) => {
+  const { rentalId } = req.params;
+  const { notes } = req.body;
+
+  if (!notes) {
+    throw new AppError(400, "Notes are required to cancel a rental");
+  }
+
+  const rental = await Rental.findById(rentalId);
+  if (!rental) throw new AppError(404, "Rental not found");
+
+  if (rental.status !== RentalStatus.ACTIVE) {
+    throw new AppError(400, "Can only cancel active rentals");
+  }
+
+  if (rental.razorpayPaymentId && rental.paymentStatus === PaymentStatus.PAID) {
+    const deduction = rental.priceSnapshot.rentalAmount * 0.1;
+    const refundAmount = rental.priceSnapshot.totalAmount - deduction;
+    
+    try {
+      await razorpay.payments.refund(rental.razorpayPaymentId, {
+        amount: Math.round(refundAmount * 100)
+      });
+      rental.paymentStatus = PaymentStatus.REFUNDED; // Represents fully resolved from customer perspective
+    } catch (error: any) {
+      console.error("Refund failed:", error);
+      throw new AppError(500, "Failed to process refund: " + error.error?.description || error.message);
+    }
+  }
+
+  rental.status = RentalStatus.CANCELLED;
+  await rental.save();
+
+  await RentalLog.create({
+    rental: rental._id,
+    action: "CANCELLED",
+    notes
+  });
+
+  return res.status(200).json({ success: true, message: "Rental cancelled with 10% deduction" });
+};
+
+export const completeRental = async (req: Request, res: Response) => {
+  const { rentalId } = req.params;
+  const { notes } = req.body;
+
+  if (!notes) {
+    throw new AppError(400, "Notes are required to complete a rental");
+  }
+
+  const rental = await Rental.findById(rentalId);
+  if (!rental) throw new AppError(404, "Rental not found");
+
+  if (rental.status !== RentalStatus.ACTIVE) {
+    throw new AppError(400, "Can only complete active rentals");
+  }
+
+  if (rental.razorpayPaymentId && rental.paymentStatus === PaymentStatus.PAID && rental.priceSnapshot.securityDeposit > 0) {
+    const refundAmount = rental.priceSnapshot.securityDeposit;
+    
+    try {
+      await razorpay.payments.refund(rental.razorpayPaymentId, {
+        amount: Math.round(refundAmount * 100)
+      });
+      // We don't change paymentStatus to REFUNDED because the rental fee was collected.
+    } catch (error: any) {
+      console.error("Refund failed:", error);
+      throw new AppError(500, "Failed to process refund: " + error.error?.description || error.message);
+    }
+  }
+
+  rental.status = RentalStatus.COMPLETED;
+  await rental.save();
+
+  await RentalLog.create({
+    rental: rental._id,
+    action: "COMPLETED",
+    notes
+  });
+
+  return res.status(200).json({ success: true, message: "Rental completed and security deposit refunded" });
 };

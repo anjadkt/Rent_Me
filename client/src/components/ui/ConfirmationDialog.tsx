@@ -7,6 +7,7 @@ interface ConfirmationDialogProps {
   confirmText?: string;
   cancelText?: string;
   isDestructive?: boolean;
+  children?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -18,6 +19,7 @@ export default function ConfirmationDialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   isDestructive = false,
+  children,
   onConfirm,
   onCancel,
 }: ConfirmationDialogProps) {
@@ -46,6 +48,11 @@ export default function ConfirmationDialog({
             <p className="text-sm font-medium text-slate-500 mt-2 leading-relaxed">
               {message}
             </p>
+            {children && (
+              <div className="mt-4">
+                {children}
+              </div>
+            )}
           </div>
         </div>
 

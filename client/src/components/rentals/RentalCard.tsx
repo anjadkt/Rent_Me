@@ -1,5 +1,5 @@
 import type { IRental } from "../../services/rental.service";
-import { Calendar } from "lucide-react";
+import { Calendar, MessageSquareText } from "lucide-react";
 
 interface RentalCardProps {
   rental: IRental;
@@ -29,10 +29,21 @@ export default function RentalCard({ rental }: RentalCardProps) {
     ACTIVE: "bg-amber-100 text-amber-700 border-amber-200",
     COMPLETED: "bg-emerald-100 text-emerald-700 border-emerald-200",
     CANCELLED: "bg-rose-100 text-rose-700 border-rose-200",
+    REJECTED: "bg-red-100 text-red-700 border-red-200",
     PENDING: "bg-slate-100 text-slate-700 border-slate-200",
   };
 
-  const statusColor = statusColors[status] || statusColors.PENDING;
+  const statusColor = statusColors[status as keyof typeof statusColors] || statusColors.PENDING;
+
+  const latestLog = rental.logs && rental.logs.length > 0 
+    ? rental.logs[rental.logs.length - 1] 
+    : null;
+
+  const noteColors = {
+    REJECTED: "bg-red-50 text-red-700 border-red-100",
+    CANCELLED: "bg-rose-50 text-rose-700 border-rose-100",
+    COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row hover:shadow-md transition-shadow">
@@ -61,9 +72,16 @@ export default function RentalCard({ rental }: RentalCardProps) {
                 {vehicleSnapshot.brand} • {vehicleSnapshot.category.replace("_", " ")}
               </p>
             </div>
-            <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${statusColor}`}>
-              {status}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${statusColor}`}>
+                {status}
+              </span>
+              {latestLog && ["REJECTED", "CANCELLED", "COMPLETED"].includes(status.toUpperCase()) && (
+                <div className="cursor-help" title={`Admin Note:\n${latestLog.notes}`}>
+                  <MessageSquareText className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 mt-4 text-sm font-medium text-slate-600">

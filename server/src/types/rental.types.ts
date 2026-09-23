@@ -4,6 +4,7 @@ export enum RentalStatus {
   ACTIVE = "active",
   COMPLETED = "completed",
   CANCELLED = "cancelled",
+  REJECTED = "rejected",
 }
 
 export enum PaymentStatus {

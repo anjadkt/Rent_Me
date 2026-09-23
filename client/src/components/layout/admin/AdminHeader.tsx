@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, LogOut, Menu } from "lucide-react";
 
-export default function AdminHeader() {
+export default function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -26,11 +26,22 @@ export default function AdminHeader() {
   };
 
   return (
-    <header className="h-16 flex justify-between items-center bg-white border border-slate-200 rounded-2xl px-6 w-full shrink-0 shadow-sm">
+    <header className="h-16 flex justify-between items-center bg-white border border-slate-200 rounded-2xl px-4 sm:px-6 w-full shrink-0 shadow-sm">
       <div className="flex items-center gap-4">
+        {/* Mobile Hamburger Menu */}
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <div className="flex items-center gap-2 group transition-transform hover:scale-[1.02] shrink-0">
-          <span className="font-extrabold text-slate-900 text-xl tracking-tight">
+          <span className="font-extrabold text-slate-900 text-xl tracking-tight hidden sm:block">
             Admin<span className="text-amber-500">Portal</span>
+          </span>
+          <span className="font-extrabold text-slate-900 text-xl tracking-tight sm:hidden">
+            Rent<span className="text-amber-500">Ride</span>
           </span>
         </div>
       </div>

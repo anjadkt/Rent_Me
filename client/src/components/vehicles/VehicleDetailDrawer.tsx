@@ -46,10 +46,35 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
     return () => { mounted = false; };
   }, [vehicleId]);
 
+  const renderLayout = (content: React.ReactNode) => (
+    <>
+      {/* Desktop view */}
+      <div className="hidden lg:flex bg-white rounded-3xl border border-slate-200/80 shadow-lg flex-col relative max-h-[calc(100vh-3rem)] min-h-[600px] overflow-hidden">
+        {content}
+      </div>
+
+      {/* Mobile view */}
+      <div className="lg:hidden fixed inset-0 z-[100] flex flex-col justify-end">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
+        
+        {/* Mobile close button outside on top */}
+        <div className="relative z-10 w-full flex justify-center pb-4">
+          <button onClick={onClose} className="text-white hover:bg-white/20 bg-white/10 border border-white/20 p-3 rounded-full transition flex items-center justify-center backdrop-blur-md shadow-lg">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="w-full h-[90vh] bg-white rounded-t-3xl relative z-10 flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl overflow-hidden">
+          {content}
+        </div>
+      </div>
+    </>
+  );
+
   if (loading) {
-    return (
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-md space-y-6 relative max-h-[calc(100vh-3rem)] animate-pulse w-full min-h-[600px]">
-        <div className="flex items-center justify-between">
+    return renderLayout(
+      <div className="p-6 space-y-6 w-full animate-pulse flex-1 overflow-y-auto">
+        <div className="hidden lg:flex items-center justify-between">
           <div className="w-8 h-8 bg-slate-200 rounded-full" />
         </div>
         <div className="aspect-[16/10] bg-slate-200 rounded-xl" />
@@ -63,14 +88,19 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
   }
 
   if (error || !vehicle) {
-    return (
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-md space-y-6 relative max-h-[calc(100vh-3rem)]">
-        <div className="flex items-center justify-between">
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition">
-            <X className="w-5 h-5" />
-          </button>
+    return renderLayout(
+      <div className="flex flex-col items-center justify-center p-10 text-center flex-1 overflow-y-auto">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+          <X className="w-8 h-8" />
         </div>
-        <p className="text-red-500 font-semibold text-center mt-10">{error || "Vehicle not found"}</p>
+        <h3 className="text-lg font-bold text-slate-900 mb-2">Oops!</h3>
+        <p className="text-sm text-slate-500 font-medium">{error || "Vehicle not found"}</p>
+        <button 
+          onClick={onClose}
+          className="mt-6 px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl shadow-md mx-auto block"
+        >
+          Close
+        </button>
       </div>
     );
   }
@@ -248,11 +278,11 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
 
   // -------------------------
 
-  return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 shadow-lg flex flex-col relative max-h-[calc(100vh-3rem)] overflow-hidden">
+  return renderLayout(
+    <>
       <div className="p-6 overflow-y-auto scrollbar-hide flex-1 space-y-6 pb-28">
         {/* Top Header Controls */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+      <div className="hidden lg:flex items-center justify-between pb-2 border-b border-slate-100">
         <span className="font-bold text-slate-800 text-sm tracking-tight">Vehicle Details</span>
         <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition bg-slate-50 hover:bg-slate-100 p-2 rounded-full">
           <X className="w-4 h-4" />
@@ -395,7 +425,7 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
       </div> {/* End of scrollable content */}
 
       {/* Sticky Footer CTA */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 px-6 bg-white border-t border-slate-100 flex items-center justify-between z-10 rounded-b-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+      <div className="absolute bottom-0 left-0 right-0 p-4 px-6 bg-white border-t border-slate-100 flex items-center justify-between z-10 lg:rounded-b-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
           <div>
             <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Amount</span>
             <span className="text-2xl font-black text-slate-900">
@@ -415,6 +445,6 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
           </button>
       </div>
 
-    </div>
+    </>
   );
 }

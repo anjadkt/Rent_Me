@@ -20,7 +20,7 @@ export default function VehicleFilters({
   return (
     <div className="flex justify-center w-full">
       {/* Combined Search Bar Card */}
-      <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-slate-200/80 shadow-sm flex flex-row flex-wrap items-center gap-2 w-full max-w-5xl">
+      <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2 w-full max-w-5xl">
         {/* Search */}
         <div className="flex-1 min-w-[200px] flex items-center px-3 py-1">
           <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />

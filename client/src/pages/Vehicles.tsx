@@ -134,7 +134,7 @@ export default function Vehicles() {
 
           {/* Right Selected Detail Drawer Card */}
           {selectedVehicleId && (
-            <div className="lg:col-span-7 xl:col-span-8 sticky top-6">
+            <div className="lg:col-span-7 xl:col-span-8 lg:sticky lg:top-6 z-[60]">
               <VehicleDetailDrawer 
                 vehicleId={selectedVehicleId} 
                 onClose={() => setSelectedVehicleId(null)} 

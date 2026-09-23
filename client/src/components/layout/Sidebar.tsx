@@ -14,28 +14,45 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col pt-8 pb-6 px-4 bg-[#f3f2ee] border-r border-slate-200/60 w-20 h-screen sticky top-0">
-      {/* Top Logo Icon aligned horizontally to the right */}
-      <div className="w-full flex justify-end">
-        <Link to="/" className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md hover:bg-slate-800 transition-colors">
-          <Navigation className="w-4 h-4 fill-current" />
-        </Link>
-      </div>
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col pt-8 pb-6 px-4 bg-[#f3f2ee] border-r border-slate-200/60 w-20 h-screen sticky top-0 z-40 shrink-0">
+        {/* Top Logo Icon aligned horizontally to the right */}
+        <div className="w-full flex justify-end">
+          <Link to="/" className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md hover:bg-slate-800 transition-colors">
+            <Navigation className="w-4 h-4 fill-current" />
+          </Link>
+        </div>
 
-      {/* Top Navigation */}
-      <div className="flex-1 flex flex-col justify-start items-center w-full mt-8">
-        <nav className="flex flex-col gap-4 bg-white/70 backdrop-blur-md p-2 rounded-full border border-slate-200/60 shadow-sm">
-        {/* Vehicles / Home */}
-        <Link to="/" className={getButtonClass("/")}>
-          <Car className="w-5 h-5" />
-        </Link>
-        
-        {/* Rentals */}
-        <Link to="/rentals" className={getButtonClass("/rentals")}>
-          <ArrowRightLeft className="w-5 h-5" />
-        </Link>
-      </nav>
+        {/* Top Navigation */}
+        <div className="flex-1 flex flex-col justify-start items-center w-full mt-8">
+          <nav className="flex flex-col gap-4 bg-white/70 backdrop-blur-md p-2 rounded-full border border-slate-200/60 shadow-sm">
+            {/* Vehicles / Home */}
+            <Link to="/" className={getButtonClass("/")}>
+              <Car className="w-5 h-5" />
+            </Link>
+            
+            {/* Rentals */}
+            <Link to="/rentals" className={getButtonClass("/rentals")}>
+              <ArrowRightLeft className="w-5 h-5" />
+            </Link>
+          </nav>
+        </div>
+      </aside>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
+        <nav className="flex items-center gap-2 bg-white/90 backdrop-blur-md p-2 rounded-full border border-slate-200/60 shadow-xl">
+          <Link to="/" className={`${getButtonClass("/")} flex items-center gap-1.5`}>
+            <Car className="w-5 h-5" />
+            {location.pathname === "/" && <span className="text-xs font-bold pr-1">Vehicles</span>}
+          </Link>
+          <Link to="/rentals" className={`${getButtonClass("/rentals")} flex items-center gap-1.5`}>
+            <ArrowRightLeft className="w-5 h-5" />
+            {location.pathname.startsWith("/rentals") && <span className="text-xs font-bold pr-1">Rentals</span>}
+          </Link>
+        </nav>
       </div>
-    </aside>
+    </>
   );
 }

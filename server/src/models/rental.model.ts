@@ -151,6 +151,10 @@ const rentalSchema = new Schema<IRental>(
       type: String,
     },
 
+    razorpayPaymentId: {
+      type: String,
+    },
+
     paymentStatus: {
       type: String,
       enum: Object.values(PaymentStatus),
@@ -168,8 +172,17 @@ const rentalSchema = new Schema<IRental>(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+rentalSchema.virtual("logs", {
+  ref: "RentalLog",
+  localField: "_id",
+  foreignField: "rental"
+});
+
 
 rentalSchema.index({
   vehicle: 1,

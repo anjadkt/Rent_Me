@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { Settings, Car, Bell, User, LogOut, ArrowRight } from "lucide-react";
 import ConfirmationDialog from "../ui/ConfirmationDialog";
+import toast from "react-hot-toast";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -25,11 +26,13 @@ export default function Header() {
   const handleLogout = () => {
     logout();
     setIsDropdownOpen(false);
+    setIsLogoutDialogOpen(false);
+    toast.success("Logged out successfully");
     navigate("/");
   };
 
   return (
-    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 w-full bg-white px-6 py-4 rounded-2xl border border-slate-200 shadow-sm">
+    <header className="flex justify-between items-center mb-8 w-full bg-white px-4 sm:px-6 py-4 rounded-2xl border border-slate-200 shadow-sm">
       <Link to="/" className="flex items-center gap-2 group transition-transform hover:scale-[1.02] shrink-0">
         <span className="font-extrabold text-slate-900 text-2xl tracking-tight">
           Rent<span className="text-amber-500">Ride</span>

@@ -4,11 +4,8 @@ import { Toaster } from "react-hot-toast";
 import Auth from "./pages/Auth";
 import Rentals from "./pages/Rental";
 import Vehicles from "./pages/Vehicles";
-
 import AdminVehicles from "./pages/admin/AdminVehicles";
 import AdminRentals from "./pages/admin/AdminRentals";
-import AdminUsers from "./pages/admin/AdminUsers";
-
 import PublicRoute from "./routes/PublicRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
@@ -35,7 +32,6 @@ function App() {
           <Route element={<AdminLayout />}>
             <Route path="/admin/vehicles" element={<AdminVehicles />} />
             <Route path="/admin/rentals" element={<AdminRentals />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
         </Route>
       </Routes>

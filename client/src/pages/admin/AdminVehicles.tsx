@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import { getVehicles, deleteVehicle, type Vehicle, type VehiclePagination } from "../../services/vehicles.service";
 import VehicleFormModal from "../../components/admin/VehicleFormModal";
-import VehicleFilters from "../../components/vehicles/VehicleFilters";
+
 import ConfirmationDialog from "../../components/ui/ConfirmationDialog";
 
 export default function AdminVehicles() {
@@ -88,16 +88,43 @@ export default function AdminVehicles() {
         </button>
       </div>
 
-      {/* Filters (Reusing the public filter component but wrapping it nicely) */}
-      <div className="bg-slate-50 p-2 rounded-2xl border border-slate-200">
-        <VehicleFilters 
-          search={search}
-          category={category}
-          sort={sort}
-          onSearchChange={setSearch}
-          onCategoryChange={setCategory}
-          onSortChange={setSort}
-        />
+      {/* Filters */}
+      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by vehicle name, brand, reg number..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-sm"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 min-w-[140px] shadow-sm"
+            >
+              <option value="">All Categories</option>
+              <option value="bike">Bike</option>
+              <option value="ev_bike">EV Bike</option>
+              <option value="cycle">Cycle</option>
+            </select>
+            
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 min-w-[140px] shadow-sm"
+            >
+              <option value="latest">Latest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
