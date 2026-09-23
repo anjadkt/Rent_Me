@@ -204,7 +204,7 @@ export const googleLogin = async (req: Request, res:Response, _next:NextFunction
     });
         
     return res.redirect(
-      `${env.clientUrl}/`
+      user.role === UserRole.ADMIN ? `${env.clientUrl}/admin/vehicles` : `${env.clientUrl}/`
     );
 
 }

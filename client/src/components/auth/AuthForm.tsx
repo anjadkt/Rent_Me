@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { sendOtp, verifyOtp } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
+import { ArrowLeft } from "lucide-react";
 
 type AuthStep = "email" | "otp";
 
@@ -83,7 +84,12 @@ export default function AuthForm() {
       login(res.data);
 
       toast.success("Login successful!");
-      navigate("/");
+      
+      if (res.data.role === "admin") {
+        navigate("/admin/vehicles");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Invalid verification code");
     } finally {
@@ -187,7 +193,7 @@ export default function AuthForm() {
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 transition"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              <ArrowLeft className="w-3.5 h-3.5" />
               Change Email
             </button>
           </div>

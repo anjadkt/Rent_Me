@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getVehicleById, type Vehicle } from "../../services/vehicles.service";
 import { createRental, verifyPayment } from "../../services/rental.service";
+import { X } from "lucide-react";
 
 interface VehicleDetailDrawerProps {
   vehicleId: string;
@@ -66,7 +67,7 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-md space-y-6 relative max-h-[calc(100vh-3rem)]">
         <div className="flex items-center justify-between">
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
         <p className="text-red-500 font-semibold text-center mt-10">{error || "Vehicle not found"}</p>
@@ -254,7 +255,7 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
       <div className="flex items-center justify-between pb-2 border-b border-slate-100">
         <span className="font-bold text-slate-800 text-sm tracking-tight">Vehicle Details</span>
         <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition bg-slate-50 hover:bg-slate-100 p-2 rounded-full">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          <X className="w-4 h-4" />
         </button>
       </div>
 

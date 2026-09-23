@@ -4,6 +4,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import type { Vehicle } from "../../services/vehicles.service";
+import { Heart, Zap } from "lucide-react";
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -44,9 +45,7 @@ export default function VehicleCard({ vehicle, isSelected, onSelect }: VehicleCa
           onClick={(e) => e.stopPropagation()}
           className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
+          <Heart className="w-4 h-4" />
         </button>
       </div>
 
@@ -93,7 +92,7 @@ export default function VehicleCard({ vehicle, isSelected, onSelect }: VehicleCa
       <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px]">
         <div className="flex items-center gap-1.5 text-slate-400 font-medium">
           <span className="flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            <Zap className="w-3 h-3" />
             Auto
           </span>
           <span>•</span>

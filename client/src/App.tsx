@@ -5,9 +5,14 @@ import Auth from "./pages/Auth";
 import Rentals from "./pages/Rental";
 import Vehicles from "./pages/Vehicles";
 
+import AdminVehicles from "./pages/admin/AdminVehicles";
+import AdminRentals from "./pages/admin/AdminRentals";
+import AdminUsers from "./pages/admin/AdminUsers";
+
 import PublicRoute from "./routes/PublicRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
+import AdminLayout from "./components/layout/admin/AdminLayout";
 
 function App() {
   return (
@@ -24,10 +29,14 @@ function App() {
           <Route path="/" element={<Vehicles />} />
           <Route path="/rentals" element={<Rentals />} />
         </Route>
-
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           
+        {/* Protected Admin Routes with AdminLayout */}
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/vehicles" element={<AdminVehicles />} />
+            <Route path="/admin/rentals" element={<AdminRentals />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
         </Route>
       </Routes>
     </>

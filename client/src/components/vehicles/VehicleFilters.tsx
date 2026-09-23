@@ -1,3 +1,5 @@
+import { Search } from "lucide-react";
+
 interface VehicleFiltersProps {
   search: string;
   category: string;
@@ -21,9 +23,7 @@ export default function VehicleFilters({
       <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-slate-200/80 shadow-sm flex flex-row flex-wrap items-center gap-2 w-full max-w-5xl">
         {/* Search */}
         <div className="flex-1 min-w-[200px] flex items-center px-3 py-1">
-          <svg className="w-4 h-4 text-slate-400 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
           <input
             type="text"
             value={search}

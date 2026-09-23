@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import PageLoader from "../components/ui/PageLoader";
 
 interface ProtectedRouteProps {
   allowedRoles?: string[];
@@ -11,7 +12,7 @@ function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 
   if (loading) {
     
-    return <div>Loading...</div>;
+    return <PageLoader />;
   }
 
   // Not authenticated
