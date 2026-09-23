@@ -5,7 +5,7 @@ export default function Header() {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 w-full">
+    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 w-full bg-white px-6 py-4 rounded-2xl border border-slate-200 shadow-sm">
       <Link to="/" className="flex items-center gap-2 group transition-transform hover:scale-[1.02] shrink-0">
         <span className="font-extrabold text-slate-900 text-2xl tracking-tight">
           Rent<span className="text-amber-500">Ride</span>
@@ -48,7 +48,7 @@ export default function Header() {
             {/* Profile Greeting */}
             <div className="hidden sm:flex flex-col items-start pl-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Welcome back,</span>
-              <span className="text-sm font-extrabold text-slate-900">{user.name.split(' ')[0]}</span>
+              <span className="text-sm font-extrabold text-slate-900">{user?.name?.split(' ')[0]}</span>
             </div>
           </>
         ) : (

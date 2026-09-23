@@ -241,68 +241,27 @@ export const getRentals = async (req: Request, res: Response) => {
     throw new AppError(401, "Authentication required");
   }
 
-  const {
-    status,
-    page = "1",
-    limit = "10",
-  } = req.query;
+  // Fetch all rentals for the user, sorted by most recent
+  const rentals = await Rental.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .lean();
 
-  // Pagination
-  const currentPage = Math.max(Number(page), 1);
-
-  const itemsPerPage = Math.min(
-    Math.max(Number(limit), 1),
-    50
+  // Separate into active and past (inactive) rentals
+  const activeRentals = rentals.filter(
+    (rental) => rental.status === RentalStatus.ACTIVE
   );
 
-  const skip =
-    (currentPage - 1) * itemsPerPage;
-
-  // Filter
-  const filter: Record<string, unknown> = {
-    user: userId,
-  };
-
-  // Status filter
-  if (status) {
-
-    if (!Object.values(RentalStatus).includes(status as RentalStatus)) {
-      throw new AppError(400, "Invalid rental status");
-    }
-
-    filter.status = status;
-  }
-
-
-
-  // Get rentals
-  const [rentals, total] = await Promise.all([
-    Rental.find(filter)
-      .sort({
-        status: 1,
-        createdAt: -1,
-      })
-      .skip(skip)
-      .limit(itemsPerPage)
-      .lean(),
-
-    Rental.countDocuments(filter),
-  ]);
-
-  const totalPages = Math.ceil(
-    total / itemsPerPage
+  const pastRentals = rentals.filter(
+    (rental) =>
+      rental.status === RentalStatus.COMPLETED ||
+      rental.status === RentalStatus.CANCELLED
   );
 
   return res.status(200).json({
     success: true,
-    data: rentals,
-    pagination: {
-      total,
-      page: currentPage,
-      limit: itemsPerPage,
-      totalPages,
-      hasNextPage: currentPage < totalPages,
-      hasPreviousPage: currentPage > 1,
+    data: {
+      active: activeRentals,
+      past: pastRentals,
     },
   });
 };
