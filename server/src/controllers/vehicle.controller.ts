@@ -99,7 +99,7 @@ export const getVehicles = async (req: Request, res: Response) => {
   const [vehicles, total] = await Promise.all([
     Vehicle.find(filter)
       .select(
-        "name category brand modelName registrationNumber images pricePerDay status isActive createdAt"
+        "name category brand modelName securityDeposit registrationNumber images pricePerDay status isActive createdAt"
       )
       .sort(sortOption)
       .skip(skip)
@@ -344,9 +344,15 @@ export const updateVehicle = async (req: Request, res: Response) => {
     );
 
     await Promise.all(
-      imagesToRemove.map((image) =>
-        deleteFromCloudinary(image.publicId)
-      )
+      imagesToRemove.map(async (image) => {
+        try {
+          if (image.publicId && !image.publicId.startsWith('http')) {
+            await deleteFromCloudinary(image.publicId);
+          }
+        } catch (error) {
+          console.error(`Failed to delete image ${image.publicId} from Cloudinary:`, error);
+        }
+      })
     );
 
     vehicle.images = vehicle.images.filter(
@@ -403,19 +409,36 @@ export const deleteVehicle = async (req: Request, res: Response) => {
     throw new AppError(404, "Vehicle not found");
   }
 
-  // Don't allow deleting a currently rented vehicle
-  if (vehicle.status === VehicleStatus.RENTED) {
+  // Don't allow deleting a vehicle if it has active or pending rentals
+  const activeRentals = await Rental.countDocuments({
+    vehicle: vehicleId,
+    status: { $in: [RentalStatus.ACTIVE] }
+  });
+
+  if (activeRentals > 0) {
     throw new AppError(
       400,
-      "Cannot delete a vehicle that is currently rented"
+      "Cannot delete a vehicle that has active rentals"
     );
   }
 
-  // Soft delete
-  vehicle.isActive = false;
-  vehicle.status = VehicleStatus.INACTIVE;
+  // Remove images from Cloudinary
+  if (vehicle.images && vehicle.images.length > 0) {
+    await Promise.all(
+      vehicle.images.map(async (image) => {
+        try {
+          if (image.publicId && !image.publicId.startsWith('http')) {
+            await deleteFromCloudinary(image.publicId);
+          }
+        } catch (error) {
+          console.error(`Failed to delete image ${image.publicId} from Cloudinary:`, error);
+        }
+      })
+    );
+  }
 
-  await vehicle.save();
+  // Hard delete
+  await vehicle.deleteOne();
 
   return res.status(200).json({
     success: true,

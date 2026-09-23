@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { Settings, Car, Bell, User, LogOut, ArrowRight } from "lucide-react";
+import ConfirmationDialog from "../ui/ConfirmationDialog";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -18,6 +19,8 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -103,7 +106,7 @@ export default function Header() {
                     </button>
                     <div className="h-px bg-slate-100 my-1 mx-2" />
                     <button 
-                      onClick={handleLogout}
+                      onClick={() => setIsLogoutDialogOpen(true)}
                       className="w-full text-left px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
@@ -121,6 +124,17 @@ export default function Header() {
           </Link>
         )}
       </div>
+
+      <ConfirmationDialog
+        isOpen={isLogoutDialogOpen}
+        title="Logout"
+        message="Are you sure you want to log out of your account?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleLogout}
+        onCancel={() => setIsLogoutDialogOpen(false)}
+      />
     </header>
   );
 }

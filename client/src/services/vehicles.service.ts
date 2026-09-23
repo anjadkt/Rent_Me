@@ -10,6 +10,7 @@ export interface Vehicle {
   description?: string;
   images: string[];
   pricePerDay: number;
+  securityDeposit?: number;
   status: string;
   isActive: boolean;
   specifications?: any;
@@ -72,5 +73,28 @@ export const getVehicleById = async (
   const response = await api.get<GetVehicleByIdResponse>(
     `/vehicles/${vehicleId}`
   );
+  return response.data;
+};
+
+export const createVehicle = async (formData: FormData): Promise<{ success: boolean; data: Vehicle; message: string }> => {
+  const response = await api.post("/vehicles", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+export const updateVehicle = async (id: string, formData: FormData): Promise<{ success: boolean; data: Vehicle; message: string }> => {
+  const response = await api.put(`/vehicles/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+export const deleteVehicle = async (id: string): Promise<{ success: boolean; message: string }> => {
+  const response = await api.delete(`/vehicles/${id}`);
   return response.data;
 };

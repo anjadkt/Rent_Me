@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
@@ -6,9 +6,6 @@ import AdminHeader from "./AdminHeader";
 export default function AdminLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("adminSidebarCollapsed");
-    // If not found in localStorage, you can default it to false (open) or true (closed)
-    // "don't leave it always open" might imply we should default it to collapsed or just remember what they chose.
-    // Assuming remember what they chose, default false is fine.
     return saved === "true";
   });
 
