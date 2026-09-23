@@ -138,4 +138,4 @@ npm run dev
 ### Admin Access
 To log into the Admin Dashboard, use the email that was created during the seeding process:
 - **Email:** `admin@rentride.com`
-- Check your email (or the server terminal logs if you haven't configured SMTP fully) for the OTP to log in.
+- **OTP:** `000000` (Guest Admin bypass)

