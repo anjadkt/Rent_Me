@@ -2,7 +2,6 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 import {
   PaymentStatus,
   RentalStatus,
-  RentalType,
 } from "../types/rental.types.js";
 import { VehicleCategory } from "../types/vehicle.types.js";
 
@@ -28,10 +27,7 @@ export interface IRental extends Document {
 
   vehicleSnapshot: IRentalVehicleSnapshot;
 
-  rentalType: RentalType;
-
-  startAt: Date;
-  endAt: Date;
+  dates: Date[];
 
   duration: number;
 
@@ -121,20 +117,15 @@ const rentalSchema = new Schema<IRental>(
       required: true,
     },
 
-    rentalType: {
-      type: String,
-      enum: Object.values(RentalType),
+    dates: {
+      type: [Date],
       required: true,
-    },
-
-    startAt: {
-      type: Date,
-      required: true,
-    },
-
-    endAt: {
-      type: Date,
-      required: true,
+      validate: {
+        validator: function(v: Date[]) {
+          return v && v.length > 0;
+        },
+        message: 'A rental must have at least one date'
+      }
     },
 
     duration: {
@@ -176,8 +167,7 @@ const rentalSchema = new Schema<IRental>(
 
 rentalSchema.index({
   vehicle: 1,
-  startAt: 1,
-  endAt: 1,
+  dates: 1,
 });
 
 export const Rental = mongoose.model<IRental>(

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+
 import { connectDatabase } from "./config/db.js";
 import { Vehicle } from "./models/vehicle.model.js";
 import { VehicleCategory, VehicleStatus } from "./types/vehicle.types.js";

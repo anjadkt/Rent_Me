@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PaymentStatus,RentalStatus,RentalType } from "../types/rental.types.js";
+import { PaymentStatus, RentalStatus } from "../types/rental.types.js";
 import { VehicleStatus } from "../types/vehicle.types.js";
 import AppError from "../utils/appError.js";
 import { Vehicle } from "../models/vehicle.model.js";
@@ -19,9 +19,7 @@ export const createRental = async ( req: Request,res: Response ) => {
 
   const {
     vehicleId,
-    rentalType,
-    startAt,
-    duration,
+    dates,
   } = req.body;
 
   // -----------------------------
@@ -32,27 +30,8 @@ export const createRental = async ( req: Request,res: Response ) => {
     throw new AppError(400, "Vehicle ID is required");
   }
 
-  if (!rentalType) {
-    throw new AppError(400, "Rental type is required");
-  }
-
-  if (!Object.values(RentalType).includes(rentalType)) {
-    throw new AppError(400, "Invalid rental type");
-  }
-
-  if (!startAt) {
-    throw new AppError(400, "Rental start time is required");
-  }
-
-  if (!duration) {
-    throw new AppError(400, "Rental duration is required");
-  }
-
-  if (!Number.isInteger(Number(duration)) || Number(duration) <= 0) {
-    throw new AppError(
-      400,
-      "Rental duration must be a positive number"
-    );
+  if (!dates || !Array.isArray(dates) || dates.length === 0) {
+    throw new AppError(400, "Please provide an array of dates to book");
   }
 
   // Find vehicle
@@ -69,31 +48,25 @@ export const createRental = async ( req: Request,res: Response ) => {
     );
   }
 
-  // Calculate rental period
-  const rentalStart = new Date(startAt);
+  // Calculate and validate dates
+  const parsedDates = dates.map(d => new Date(d));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  if (Number.isNaN(rentalStart.getTime())) {
-    throw new AppError(400, "Invalid start date");
+  for (const d of parsedDates) {
+    if (Number.isNaN(d.getTime())) {
+      throw new AppError(400, "One or more dates are invalid");
+    }
+    // Normalize to midnight
+    d.setHours(0, 0, 0, 0);
+    if (d < today) {
+      throw new AppError(400, "Cannot book dates in the past");
+    }
   }
 
-  if (rentalStart <= new Date()) {
-    throw new AppError(
-      400,
-      "Rental start time must be in the future"
-    );
-  }
-
-  const rentalDuration = Number(duration);
-
-  const millisecondsPerUnit =
-    rentalType === RentalType.HOUR
-      ? 60 * 60 * 1000
-      : 24 * 60 * 60 * 1000;
-
-  const rentalEnd = new Date(
-    rentalStart.getTime() +
-      rentalDuration * millisecondsPerUnit
-  );
+  // Deduplicate dates
+  const uniqueDates = Array.from(new Set(parsedDates.map(d => d.getTime()))).map(t => new Date(t));
+  const rentalDuration = uniqueDates.length;
 
   // Check overlapping rentals
   const overlappingRental = await Rental.findOne({
@@ -106,19 +79,15 @@ export const createRental = async ( req: Request,res: Response ) => {
       ],
     },
 
-    startAt: {
-      $lt: rentalEnd,
-    },
-
-    endAt: {
-      $gt: rentalStart,
+    dates: {
+      $in: uniqueDates,
     },
   });
 
   if (overlappingRental) {
     throw new AppError(
       409,
-      "Vehicle is already booked for the selected period"
+      "Vehicle is already booked for one or more of the selected dates"
     );
   }
 
@@ -147,10 +116,7 @@ export const createRental = async ( req: Request,res: Response ) => {
       image: vehicle.images?.[0]?.url,
     },
 
-    rentalType,
-
-    startAt: rentalStart,
-    endAt: rentalEnd,
+    dates: uniqueDates,
 
     duration: rentalDuration,
 
@@ -272,7 +238,6 @@ export const getRentals = async (req: Request, res: Response) => {
 
   const {
     status,
-    rentalType,
     page = "1",
     limit = "10",
   } = req.query;
@@ -303,15 +268,7 @@ export const getRentals = async (req: Request, res: Response) => {
     filter.status = status;
   }
 
-  // Rental type filter
-  if (rentalType) {
 
-    if (!Object.values(RentalType).includes(rentalType as RentalType)) {
-      throw new AppError(400, "Invalid rental type");
-    }
-
-    filter.rentalType = rentalType;
-  }
 
   // Get rentals
   const [rentals, total] = await Promise.all([
@@ -351,7 +308,6 @@ export const getAllRentals = async (req: Request, res: Response) => {
     search,
     status,
     paymentStatus,
-    rentalType,
     fromDate,
     toDate,
     sort = "latest",
@@ -392,14 +348,7 @@ export const getAllRentals = async (req: Request, res: Response) => {
     );
   }
 
-  if (
-    rentalType &&
-    !Object.values(RentalType).includes(
-      rentalType as RentalType
-    )
-  ) {
-    throw new AppError(400, "Invalid rental type");
-  }
+
 
   // Match filter
   const matchFilter: Record<string, any> = {};
@@ -412,9 +361,7 @@ export const getAllRentals = async (req: Request, res: Response) => {
     matchFilter.paymentStatus = paymentStatus;
   }
 
-  if (rentalType) {
-    matchFilter.rentalType = rentalType;
-  }
+
 
   // Date filtering
   if (fromDate || toDate) {
@@ -557,7 +504,7 @@ export const getAllRentals = async (req: Request, res: Response) => {
   if (sort === "start_latest") {
     pipeline.push({
       $sort: {
-        startAt: -1,
+        dates: -1,
       },
     });
   }
@@ -565,7 +512,7 @@ export const getAllRentals = async (req: Request, res: Response) => {
   if (sort === "start_earliest") {
     pipeline.push({
       $sort: {
-        startAt: 1,
+        dates: 1,
       },
     });
   }

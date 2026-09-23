@@ -7,10 +7,12 @@ export interface Vehicle {
   brand: string;
   modelName: string;
   registrationNumber: string;
+  description?: string;
   images: string[];
   pricePerDay: number;
   status: string;
   isActive: boolean;
+  specifications?: any;
   createdAt: string;
 }
 
@@ -49,5 +51,26 @@ export const getVehicles = async (
     }
   );
 
+  return response.data;
+};
+
+export interface GetVehicleByIdResponse {
+  success: boolean;
+  data: {
+    vehicle: Vehicle;
+    availability: {
+      isAvailable: boolean;
+      currentRental: any | null;
+      upcomingRentals: any[];
+    };
+  };
+}
+
+export const getVehicleById = async (
+  vehicleId: string
+): Promise<GetVehicleByIdResponse> => {
+  const response = await api.get<GetVehicleByIdResponse>(
+    `/vehicles/${vehicleId}`
+  );
   return response.data;
 };

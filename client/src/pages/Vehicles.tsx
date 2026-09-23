@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import VehicleFilters from "../components/vehicles/VehicleFilters";
 import VehicleList from "../components/vehicles/VehicleList";
 import VehiclePaginationComponent from "../components/vehicles/VehiclePagination";
@@ -9,15 +10,25 @@ export default function Vehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [pagination, setPagination] = useState<VehiclePagination | null>(null);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedVehicleId = searchParams.get("vehicleId");
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("latest");
 
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const setSelectedVehicleId = (id: string | null) => {
+    if (id) {
+      searchParams.set("vehicleId", id);
+    } else {
+      searchParams.delete("vehicleId");
+    }
+    setSearchParams(searchParams);
+  };
 
   const limit = 12;
 
@@ -81,9 +92,9 @@ export default function Vehicles() {
         )}
 
         {/* Main Grid + Drawer Container */}
-        <div className={`grid grid-cols-1 ${selectedVehicle ? "lg:grid-cols-12 gap-6" : ""} items-start`}>
+        <div className={`grid grid-cols-1 ${selectedVehicleId ? "lg:grid-cols-12 gap-6" : ""} items-start`}>
           {/* Left / Main Cards List */}
-          <div className={`${selectedVehicle ? "lg:col-span-5 xl:col-span-4" : "col-span-1 lg:col-span-12"} flex flex-col gap-4`}>
+          <div className={`${selectedVehicleId ? "lg:col-span-5 xl:col-span-4" : "col-span-1 lg:col-span-12"} flex flex-col gap-4`}>
             
             {/* Filters Panel */}
             <VehicleFilters
@@ -104,9 +115,9 @@ export default function Vehicles() {
             <VehicleList
               vehicles={vehicles}
               loading={loading}
-              selectedVehicleId={selectedVehicle?._id}
-              onSelectVehicle={(v) => setSelectedVehicle(v)}
-              isDrawerOpen={!!selectedVehicle}
+              selectedVehicleId={selectedVehicleId || undefined}
+              onSelectVehicle={(v) => setSelectedVehicleId(v._id)}
+              isDrawerOpen={!!selectedVehicleId}
             />
 
             {/* Pagination Component */}
@@ -122,11 +133,11 @@ export default function Vehicles() {
           </div>
 
           {/* Right Selected Detail Drawer Card */}
-          {selectedVehicle && (
+          {selectedVehicleId && (
             <div className="lg:col-span-7 xl:col-span-8 sticky top-6">
               <VehicleDetailDrawer 
-                vehicle={selectedVehicle} 
-                onClose={() => setSelectedVehicle(null)} 
+                vehicleId={selectedVehicleId} 
+                onClose={() => setSelectedVehicleId(null)} 
               />
             </div>
           )}

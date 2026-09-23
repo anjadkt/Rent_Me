@@ -143,50 +143,29 @@ export const getOneVehicle = async (req: Request, res: Response) => {
     throw new AppError(404, "Vehicle not found");
   }
 
-  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // Get active rental
-  const currentRental = await Rental.findOne({
+  // Get all occupied dates from active/pending rentals
+  const rentals = await Rental.find({
     vehicle: vehicle._id,
-
-    status: RentalStatus.ACTIVE,
-
-    startAt: {
-      $lte: now,
-    },
-
-    endAt: {
-      $gt: now,
-    },
-  })
-    .select("startAt endAt rentalType duration")
-    .lean();
-
-  // Get upcoming rentals
-  const upcomingRentals = await Rental.find({
-    vehicle: vehicle._id,
-
     status: {
-      $in: [
-        RentalStatus.PENDING,
-        RentalStatus.ACTIVE,
-      ],
+      $in: [RentalStatus.PENDING, RentalStatus.ACTIVE],
     },
+    dates: {
+      $gte: today
+    }
+  }).select("dates").lean();
 
-    endAt: {
-      $gt: now,
-    },
-  })
-    .select("startAt endAt rentalType duration")
-    .sort({
-      startAt: 1,
-    })
-    .lean();
+  const occupiedDatesSet = new Set<number>();
+  rentals.forEach(rental => {
+    rental.dates.forEach((d: Date) => occupiedDatesSet.add(new Date(d).setHours(0, 0, 0, 0)));
+  });
+
+  const occupiedDates = Array.from(occupiedDatesSet).sort((a, b) => a - b).map(t => new Date(t).toISOString());
 
   // Determine availability
-  const isCurrentlyAvailable =
-    vehicle.status === VehicleStatus.AVAILABLE &&
-    !currentRental;
+  const isCurrentlyAvailable = vehicle.status === VehicleStatus.AVAILABLE && !occupiedDatesSet.has(today.getTime());
 
   return res.status(200).json({
     success: true,
@@ -196,24 +175,7 @@ export const getOneVehicle = async (req: Request, res: Response) => {
 
       availability: {
         isAvailable: isCurrentlyAvailable,
-
-        currentRental: currentRental
-          ? {
-            startAt: currentRental.startAt,
-            endAt: currentRental.endAt,
-            rentalType: currentRental.rentalType,
-            duration: currentRental.duration,
-          }
-          : null,
-
-        upcomingRentals: upcomingRentals.map(
-          (rental) => ({
-            startAt: rental.startAt,
-            endAt: rental.endAt,
-            rentalType: rental.rentalType,
-            duration: rental.duration,
-          })
-        ),
+        occupiedDates,
       },
     },
   });

@@ -1,7 +1,3 @@
-export enum RentalType {
-  HOUR = "hour",
-  DAY = "day",
-}
 
 export enum RentalStatus {
   PENDING = "pending",
