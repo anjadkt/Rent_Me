@@ -74,7 +74,6 @@ export const createRental = async ( req: Request,res: Response ) => {
 
     status: {
       $in: [
-        RentalStatus.PENDING,
         RentalStatus.ACTIVE,
       ],
     },
@@ -126,6 +125,8 @@ export const createRental = async ( req: Request,res: Response ) => {
       rentalAmount,
       totalAmount,
     },
+
+    expireAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // Automatically delete after 5 days if left pending
 
     status: RentalStatus.PENDING,
 
@@ -216,6 +217,10 @@ export const verifyRentalPayment = async (req: Request, res: Response) => {
 
   rental.paymentStatus =
     PaymentStatus.PAID;
+
+  rental.status = RentalStatus.ACTIVE;
+  
+  rental.expireAt = undefined;
 
   await rental.save();
 

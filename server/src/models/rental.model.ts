@@ -42,6 +42,8 @@ export interface IRental extends Document {
 
   notes?: string;
 
+  expireAt?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -159,6 +161,10 @@ const rentalSchema = new Schema<IRental>(
       type: String,
       trim: true,
     },
+    
+    expireAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -169,6 +175,12 @@ rentalSchema.index({
   vehicle: 1,
   dates: 1,
 });
+
+// TTL index to automatically delete documents when expireAt is reached
+rentalSchema.index(
+  { expireAt: 1 },
+  { expireAfterSeconds: 0 }
+);
 
 export const Rental = mongoose.model<IRental>(
   "Rental",

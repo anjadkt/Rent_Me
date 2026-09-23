@@ -150,7 +150,7 @@ export const getOneVehicle = async (req: Request, res: Response) => {
   const rentals = await Rental.find({
     vehicle: vehicle._id,
     status: {
-      $in: [RentalStatus.PENDING, RentalStatus.ACTIVE],
+      $in: [RentalStatus.ACTIVE],
     },
     dates: {
       $gte: today

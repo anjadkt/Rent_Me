@@ -7,7 +7,7 @@ const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/vehicles", vehicleRoutes);
-router.use("/rental", rentalRoutes);
+router.use("/rentals", rentalRoutes);
 
 
 export default router;

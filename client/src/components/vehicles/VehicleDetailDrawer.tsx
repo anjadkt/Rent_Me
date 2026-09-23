@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { getVehicleById, type Vehicle } from "../../services/vehicles.service";
+import { createRental, verifyPayment } from "../../services/rental.service";
 
 interface VehicleDetailDrawerProps {
   vehicleId: string;
@@ -7,6 +10,7 @@ interface VehicleDetailDrawerProps {
 }
 
 export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetailDrawerProps) {
+  const navigate = useNavigate();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [availability, setAvailability] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -16,6 +20,8 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
   // Calendar State
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -168,6 +174,77 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
       </div>
     );
   };
+
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleBooking = async () => {
+    if (!vehicle || selectedDates.length === 0) return;
+
+    try {
+      setIsBooking(true);
+      
+      const res = await createRental({
+        vehicleId: vehicle._id,
+        dates: selectedDates.map(d => d.toISOString())
+      });
+      
+      const { rentalId, razorpay } = res.data;
+      
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        toast.error("Failed to load payment gateway");
+        setIsBooking(false);
+        return;
+      }
+      
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_xxxxxxxxx", 
+        amount: razorpay.amount,
+        currency: razorpay.currency,
+        name: "Rent Ride",
+        description: `Booking for ${vehicle.name}`,
+        order_id: razorpay.orderId,
+        handler: async function (response: any) {
+          try {
+            await verifyPayment(rentalId, {
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            toast.success("Payment successful! Booking confirmed.");
+            if (onClose) onClose();
+            // Navigate to rentals page instead of reloading
+            navigate("/rentals");
+          } catch (error) {
+            toast.error("Payment verification failed");
+          }
+        },
+        theme: {
+          color: "#f59e0b",
+        },
+      };
+      
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        toast.error(response.error.description || "Payment failed");
+      });
+      rzp.open();
+      
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to initiate booking");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
   // -------------------------
 
   return (
@@ -325,14 +402,15 @@ export default function VehicleDetailDrawer({ vehicleId, onClose }: VehicleDetai
             </span>
           </div>
           <button 
+            onClick={handleBooking}
             className={`px-8 py-3.5 font-black text-sm rounded-xl transition shadow-md ${
-              selectedDates.length > 0 
+              selectedDates.length > 0 && !isBooking
                 ? "bg-amber-400 hover:bg-amber-500 text-slate-900 shadow-amber-400/20" 
                 : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
             }`}
-            disabled={selectedDates.length === 0}
+            disabled={selectedDates.length === 0 || isBooking}
           >
-            {selectedDates.length > 0 ? "Continue Booking" : "Select Dates"}
+            {isBooking ? "Processing..." : selectedDates.length > 0 ? "Continue Booking" : "Select Dates"}
           </button>
       </div>
 
