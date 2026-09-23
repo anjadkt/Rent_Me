@@ -161,18 +161,33 @@ const vehicles = [
   }
 ];
 
+import { User } from "./models/user.model.js";
+import { UserRole } from "./types/auth.types.js";
+
 const seedDB = async () => {
   try {
     await connectDatabase();
     
-    // Clear existing
+    // Clear existing vehicles
     await Vehicle.deleteMany({});
     console.log("Existing vehicles deleted.");
     
-    // Insert new
+    // Insert new vehicles
     await Vehicle.insertMany(vehicles);
     console.log("Database seeded successfully with 4 vehicles!");
     
+    // Seed Admin User
+    await User.deleteMany({ role: UserRole.ADMIN });
+    console.log("Existing admin users deleted.");
+
+    const adminUser = {
+      name: "RentRide Admin",
+      email: "admin@rentride.com",
+      role: UserRole.ADMIN,
+    };
+    await User.create(adminUser);
+    console.log(`Admin user created successfully: ${adminUser.email}`);
+
     process.exit(0);
   } catch (error) {
     console.error("Error seeding database:", error);

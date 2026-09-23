@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "seed": "tsx src/seeder.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +15,6 @@
   "type": "module",
   "dependencies": {
     "cloudinary": "^2.11.0",
-    "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.1",
